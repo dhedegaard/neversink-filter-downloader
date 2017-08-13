@@ -1,6 +1,7 @@
 extern crate requests;
 extern crate zip;
 use std::io;
+use std::io::BufRead;
 use std::io::Cursor;
 use std::path;
 use std::env;
@@ -91,5 +92,10 @@ fn main() {
         println!("  Wrote {} ({} bytes)", filename.to_str().unwrap(), bytes);
     }
 
-    println!("All done :)");
+    println!("All done, press enter to close :)");
+
+    // Let the user read the output before closing, for cmd on windows :)
+    let stdin = io::stdin();
+    let mut line = String::new();
+    stdin.lock().read_line(&mut line).unwrap_or_default();
 }
