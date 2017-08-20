@@ -139,7 +139,7 @@ fn main() {
     // Look for existing neversink filter files.
     let current_version = match fetch_existing_filter_version() {
         Ok(version) => version,
-        Err(err) => format!("<{}>", err),
+        Err(err) => format!("<Err: {}>", err),
     };
 
     // Fetch and parse info about the latest release.
