@@ -6,7 +6,7 @@ Already compiled executables can be found under [releases](https://github.com/dh
 
 ### Missing VCRUNTIME140.dll
 
-The executables are compiled with the [Visual C++ Build Tools 2015](http://landinghub.visualstudio.com/visual-cpp-build-tools), these require the Visual C++ redistibutable to run found here:
+The executables are compiled with the [Visual C++ Build Tools 2015](http://landinghub.visualstudio.com/visual-cpp-build-tools), these require the Visual C++ redistibutable to run, download it here:
 <https://www.microsoft.com/en-us/download/details.aspx?id=48145>
 
 Download and install **vc_redist.x64.exe** and then run the executable again.
