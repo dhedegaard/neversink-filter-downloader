@@ -59,10 +59,8 @@ fn determine_poe_dir() -> Result<String, Box<Error>> {
             "Unable to find the homedir for the user.",
         )));
     }
-    let homedir = homedir.unwrap();
 
-    let poedir = homedir.join("Documents").join("My Games").join("Path of Exile");
-
+    let poedir = homedir.unwrap().join("Documents").join("My Games").join("Path of Exile");
     if !poedir.exists() {
         return Err(Box::new(io::Error::new(
             io::ErrorKind::NotFound,
