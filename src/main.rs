@@ -23,6 +23,15 @@ struct ReleaseInfo {
 fn determine_latest_release() -> Result<ReleaseInfo, Box<Error>> {
     // Fetch the URL and parse the JSON.
     let data = requests::get(LATEST_RELEASE_URL)?.json()?;
+
+    // Check that we've got the required fields in the JSON data.
+    for field_name in vec!("tag_name", "published_at", "zipball_url") {
+        if !data[field_name].is_string() {
+            return Err(Box::new(io::Error::new(io::ErrorKind::InvalidData, format!("Missing required field in JSON data: {}", field_name))));
+        }
+    }
+
+    // Now we know the required fields are available, unwrap() and return.
     Ok(ReleaseInfo {
         tag_name: data["tag_name"].as_str().unwrap().to_string(),
         published_at: data["published_at"].as_str().unwrap().to_string(),
