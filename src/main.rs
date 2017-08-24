@@ -14,20 +14,28 @@ use requests::ToJson;
 /// API URL for the latest release.
 static LATEST_RELEASE_URL: &str = "https://api.github.com/repos/NeverSinkDev/NeverSink-Filter/releases/latest";
 
+#[derive(Debug)]
 struct ReleaseInfo {
     tag_name: String,
     published_at: String,
     zip_url: String,
 }
+
 /// Determines and returns info about the latest release available.
 fn determine_latest_release() -> Result<ReleaseInfo, Box<Error>> {
     // Fetch the URL and parse the JSON.
     let data = requests::get(LATEST_RELEASE_URL)?.json()?;
 
     // Check that we've got the required fields in the JSON data.
-    for field_name in vec!("tag_name", "published_at", "zipball_url") {
+    for field_name in vec!["tag_name", "published_at", "zipball_url"] {
         if !data[field_name].is_string() {
-            return Err(Box::new(io::Error::new(io::ErrorKind::InvalidData, format!("Missing required field in JSON data: {}", field_name))));
+            return Err(Box::new(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!(
+                    "Missing required field in JSON data: {}",
+                    field_name
+                ),
+            )));
         }
     }
 
