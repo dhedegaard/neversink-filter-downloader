@@ -1,6 +1,7 @@
 extern crate requests;
 extern crate zip;
 use std::env;
+use std::error::Error;
 use std::fs;
 use std::io;
 use std::io::BufRead;
@@ -45,23 +46,25 @@ fn determine_poe_dir() -> path::PathBuf {
 }
 
 /// Reads and returns the version value from the filename specified.
-fn read_filter_version_from_string(filename: path::PathBuf) -> io::Result<String> {
+fn read_filter_version_from_string(filename: path::PathBuf) -> Result<String, Box<Error>> {
     let mut f = try!(fs::File::open(filename));
     let mut content = String::new();
     try!(f.read_to_string(&mut content));
-    let version_line = content
-        .split("\n")
-        .filter(|line| line.contains("# VERSION:"))
-        .next().unwrap();
-    Ok(version_line
-        .split_whitespace()
-        .last().unwrap()
-        .to_owned())
+    if let Some(version_line) = content.split("\n")
+        .filter(|line| line.contains("# VERSION:")).next() {
+
+        return Ok(version_line
+            .split_whitespace()
+            .last().unwrap()
+            .to_owned());
+
+    }
+    Err(Box::new(io::Error::new(io::ErrorKind::InvalidData, "Unable to fetch the version line in the filter")))
 }
 
 /// Fetches and returns an existing filter version (if there are any existing
 /// filter files).
-fn fetch_existing_filter_version() -> io::Result<String> {
+fn fetch_existing_filter_version() -> Result<String, Box<Error>> {
     for path in fs::read_dir(determine_poe_dir())? {
         let path = path?;
         if let Some(filename) = path.file_name().to_str() {
@@ -70,7 +73,7 @@ fn fetch_existing_filter_version() -> io::Result<String> {
             }
         }
     }
-    Err(io::Error::new(io::ErrorKind::Other, "No existing filters found"))
+    Err(Box::new(io::Error::new(io::ErrorKind::Other, "No existing filters found")))
 }
 
 fn remove_existing_filters(local_dir: &str) -> io::Result<()> {
