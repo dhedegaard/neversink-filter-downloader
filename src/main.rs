@@ -31,10 +31,7 @@ fn determine_latest_release() -> Result<ReleaseInfo, Box<Error>> {
         if !data[field_name].is_string() {
             return Err(Box::new(io::Error::new(
                 io::ErrorKind::InvalidData,
-                format!(
-                    "Missing required field in JSON data: {}",
-                    field_name
-                ),
+                format!("Missing required field in JSON data: {}", field_name),
             )));
         }
     }
@@ -86,8 +83,7 @@ fn read_filter_version_from_string(filename: path::PathBuf) -> Result<String, Bo
     let mut f = fs::File::open(filename)?;
     let mut content = String::new();
     f.read_to_string(&mut content)?;
-    if let Some(version_line) =
-        content
+    if let Some(version_line) = content
             .split("\n")
             .filter(|line| line.contains("# VERSION:"))
             .next()
