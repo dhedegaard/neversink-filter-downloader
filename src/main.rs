@@ -191,16 +191,17 @@ fn update_filter() -> Result<(), Box<Error>> {
     println!("Published at:      {}", latest_release.published_at);
     println!("");
 
+    // If the tag names are equal, then return.
     if current_version == latest_release.tag_name {
         println!("Latest version is already installed, doing nothing...");
-    } else {
-        println!("Removing existing filters...");
-        if let Err(err) = remove_existing_filters(&local_dir) {
-            println!("Error: unable to remove existing filter files: {}", err);
-        }
-        println!("Fetching and extracting new filters.");
-        fetch_and_extract_new_version(&local_dir, latest_release)?;
+        return Ok(());
     }
+
+    println!("Removing existing filters...");
+    remove_existing_filters(&local_dir)?;
+
+    println!("Fetching and extracting new filters.");
+    fetch_and_extract_new_version(&local_dir, latest_release)?;
 
     println!("All done");
     Ok(())
