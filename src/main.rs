@@ -202,7 +202,7 @@ fn update_filter() -> Result<(), Box<Error>> {
         fetch_and_extract_new_version(&local_dir, latest_release)?;
     }
 
-    println!("All done, press enter to close :)");
+    println!("All done");
     Ok(())
 }
 
@@ -214,6 +214,7 @@ fn main() {
 
     if cfg!(windows) {
         // Let the user read the output before closing, for cmd on windows :)
+        println!("Press enter to close :)");
         let stdin = io::stdin();
         let mut line = String::new();
         stdin.lock().read_line(&mut line).unwrap_or_default();
