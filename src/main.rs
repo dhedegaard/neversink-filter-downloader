@@ -37,19 +37,29 @@ fn fetch_url_to_buffer(url: &str) -> Vec<u8> {
 
 /// Determines and returns a path object pointing to the PoE configuration
 /// directory.
-fn determine_poe_dir() -> path::PathBuf {
-    env::home_dir()
-        .unwrap()
-        .join("Documents")
+fn determine_poe_dir() -> Result<path::PathBuf, Box<Error>> {
+    let homedir = env::home_dir();
+    if homedir.is_none() {
+        return Err(Box::new(io::Error::new(io::ErrorKind::NotFound, "Unable to find the homedir for the user.")));
+    }
+    let homedir = homedir.unwrap();
+
+    let poedir = homedir.join("Documents")
         .join("My Games")
-        .join("Path of Exile")
+        .join("Path of Exile");
+
+    if !poedir.exists() {
+        return Err(Box::new(io::Error::new(io::ErrorKind::NotFound, format!("The expected PoE directory does not exist: {}", poedir.to_str().unwrap()))));
+    }
+
+    Ok(poedir)
 }
 
 /// Reads and returns the version value from the filename specified.
 fn read_filter_version_from_string(filename: path::PathBuf) -> Result<String, Box<Error>> {
-    let mut f = try!(fs::File::open(filename));
+    let mut f = fs::File::open(filename)?;
     let mut content = String::new();
-    try!(f.read_to_string(&mut content));
+    f.read_to_string(&mut content)?;
     if let Some(version_line) = content.split("\n")
         .filter(|line| line.contains("# VERSION:")).next() {
 
@@ -65,7 +75,7 @@ fn read_filter_version_from_string(filename: path::PathBuf) -> Result<String, Bo
 /// Fetches and returns an existing filter version (if there are any existing
 /// filter files).
 fn fetch_existing_filter_version() -> Result<String, Box<Error>> {
-    for path in fs::read_dir(determine_poe_dir())? {
+    for path in fs::read_dir(determine_poe_dir()?)? {
         let path = path?;
         if let Some(filename) = path.file_name().to_str() {
             if filename.contains("NeverSink") && filename.contains(".filter") {
@@ -81,14 +91,14 @@ fn remove_existing_filters(local_dir: &str) -> io::Result<()> {
         let path = path?;
         if let Some(filename) = path.file_name().to_str() {
             if filename.contains("NeverSink") && filename.contains(".filter") {
-                try!(fs::remove_file(path.path()));
+                fs::remove_file(path.path())?;
             }
         }
     }
     Ok(())
 }
 
-fn fetch_and_extract_new_version(local_dir: &str, latest_release: ReleaseInfo) {
+fn fetch_and_extract_new_version(local_dir: &str, latest_release: ReleaseInfo) -> Result<(), Box<Error>> {
     // Fetch and parse the zipfile.
     println!("Fetching zip-file... ");
     let zipfile = fetch_url_to_buffer(&latest_release.zip_url);
@@ -96,12 +106,12 @@ fn fetch_and_extract_new_version(local_dir: &str, latest_release: ReleaseInfo) {
 
     // Initialize reading the zipfile.
     let reader = Cursor::new(zipfile);
-    let mut zipfile = zip::ZipArchive::new(reader).unwrap();
+    let mut zipfile = zip::ZipArchive::new(reader)?;
 
     // This logic'll probably improve as the library improves :)
     let empty_path = path::Path::new("");
     for i in 0..zipfile.len() {
-        let mut file = zipfile.by_index(i).unwrap();
+        let mut file = zipfile.by_index(i)?;
 
         // Skip files that are not .filter, or not in the root of the zipfile.
         let filename = file.name().to_string();
@@ -115,25 +125,20 @@ fn fetch_and_extract_new_version(local_dir: &str, latest_release: ReleaseInfo) {
         // Determine the filename on the local filesystem and create the file.
         let filename = path.file_name().unwrap();
         let local_filename = path::PathBuf::from(local_dir).join(filename);
-        let mut local_file = fs::File::create(local_filename).unwrap();
+        let mut local_file = fs::File::create(local_filename)?;
 
         // Copy from the zipfile to the local filesystem, notifying the user.
         let bytes = io::copy(&mut file, &mut local_file).unwrap();
-        println!("  Wrote {} ({} bytes)", filename.to_str().unwrap(), bytes);
+        if let Some(filename) = filename.to_str() {
+            println!("  Wrote {} ({} bytes)", filename, bytes);
+        }
     }
+    Ok(())
 }
 
-fn main() {
+fn update_filter() -> Result<(), Box<Error>> {
     // Determine the directory on the filesystem, where PoE filters should live.
-    let local_dir = determine_poe_dir();
-    if !local_dir.exists() {
-        println!(
-            "Unable to find the PoE configration directory, tried: \"{}\"",
-            local_dir.to_str().unwrap()
-        );
-        process::exit(1);
-    }
-    let local_dir = local_dir.into_os_string();
+    let local_dir = determine_poe_dir()?.into_os_string();
     println!(
         "PoE configuration directory is: \"{}\"",
         local_dir.to_str().unwrap()
@@ -161,13 +166,23 @@ fn main() {
             println!("Error: unable to remove existing filter files: {}", err);
         }
         println!("Fetching and extracting new filters.");
-        fetch_and_extract_new_version(local_dir.to_str().unwrap(), latest_release);
+        fetch_and_extract_new_version(local_dir.to_str().unwrap(), latest_release)?;
     }
 
     println!("All done, press enter to close :)");
+    Ok(())
+}
 
-    // Let the user read the output before closing, for cmd on windows :)
-    let stdin = io::stdin();
-    let mut line = String::new();
-    stdin.lock().read_line(&mut line).unwrap_or_default();
+fn main() {
+    if let Err(err) = update_filter() {
+        println!("Error updating filter: {}", err);
+        process::exit(1);
+    }
+
+    if cfg!(windows) {
+        // Let the user read the output before closing, for cmd on windows :)
+        let stdin = io::stdin();
+        let mut line = String::new();
+        stdin.lock().read_line(&mut line).unwrap_or_default();
+    }
 }
