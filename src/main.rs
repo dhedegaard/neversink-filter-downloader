@@ -75,9 +75,9 @@ fn read_filter_version_from_string(filename: path::PathBuf) -> Result<String, Bo
             .filter(|line| line.contains("# VERSION:"))
             .next()
     {
-
-        return Ok(version_line.split_whitespace().last().unwrap().to_owned());
-
+        if let Some(version_str) = version_line.split_whitespace().last() {
+            return Ok(version_str.to_owned());
+        }
     }
     Err(Box::new(io::Error::new(
         io::ErrorKind::InvalidData,
@@ -142,7 +142,11 @@ fn fetch_and_extract_new_version(
         }
 
         // Determine the filename on the local filesystem and create the file.
-        let filename = path.file_name().unwrap();
+        let filename = path.file_name();
+        if filename.is_none() {
+            continue;
+        }
+        let filename = filename.unwrap();
         let local_filename = path::PathBuf::from(local_dir).join(filename);
         let mut local_file = fs::File::create(local_filename)?;
 
