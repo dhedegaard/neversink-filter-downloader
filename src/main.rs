@@ -157,7 +157,7 @@ fn fetch_and_extract_new_version(local_dir: &str, latest_release: ReleaseInfo) -
         let mut local_file = fs::File::create(local_filename)?;
 
         // Copy from the zipfile to the local filesystem, notifying the user.
-        let bytes = io::copy(&mut file, &mut local_file).unwrap();
+        let bytes = io::copy(&mut file, &mut local_file)?;
         if let Some(filename) = filename.to_str() {
             println!("  Wrote {} ({} bytes)", filename, bytes);
         }
