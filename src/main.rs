@@ -20,39 +20,48 @@ struct ReleaseInfo {
     zip_url: String,
 }
 /// Determines and returns info about the latest release available.
-fn determine_latest_release() -> ReleaseInfo {
+fn determine_latest_release() -> Result<ReleaseInfo, Box<Error>> {
     // Fetch the URL and parse the JSON.
-    let data = requests::get(LATEST_RELEASE_URL).unwrap().json().unwrap();
-    ReleaseInfo {
+    let data = requests::get(LATEST_RELEASE_URL)?.json()?;
+    Ok(ReleaseInfo {
         tag_name: data["tag_name"].as_str().unwrap().to_string(),
         published_at: data["published_at"].as_str().unwrap().to_string(),
         zip_url: data["zipball_url"].as_str().unwrap().to_string(),
-    }
+    })
 }
 
 /// Fetches the given URL, returning the body as a string.
-fn fetch_url_to_buffer(url: &str) -> Vec<u8> {
-    requests::get(url).unwrap().content().to_owned()
+fn fetch_url_to_buffer(url: &str) -> Result<Vec<u8>, Box<Error>> {
+    Ok(requests::get(url)?.content().to_owned())
 }
 
 /// Determines and returns a path object pointing to the PoE configuration
 /// directory.
-fn determine_poe_dir() -> Result<path::PathBuf, Box<Error>> {
+fn determine_poe_dir() -> Result<String, Box<Error>> {
     let homedir = env::home_dir();
     if homedir.is_none() {
-        return Err(Box::new(io::Error::new(io::ErrorKind::NotFound, "Unable to find the homedir for the user.")));
+        return Err(Box::new(io::Error::new(
+            io::ErrorKind::NotFound,
+            "Unable to find the homedir for the user.",
+        )));
     }
     let homedir = homedir.unwrap();
 
-    let poedir = homedir.join("Documents")
-        .join("My Games")
-        .join("Path of Exile");
+    let poedir = homedir.join("Documents").join("My Games").join(
+        "Path of Exile",
+    );
 
     if !poedir.exists() {
-        return Err(Box::new(io::Error::new(io::ErrorKind::NotFound, format!("The expected PoE directory does not exist: {}", poedir.to_str().unwrap()))));
+        return Err(Box::new(io::Error::new(
+            io::ErrorKind::NotFound,
+            format!(
+                "The expected PoE directory does not exist: {}",
+                poedir.to_str().unwrap()
+            ),
+        )));
     }
 
-    Ok(poedir)
+    Ok(poedir.to_str().unwrap().to_owned())
 }
 
 /// Reads and returns the version value from the filename specified.
@@ -60,16 +69,20 @@ fn read_filter_version_from_string(filename: path::PathBuf) -> Result<String, Bo
     let mut f = fs::File::open(filename)?;
     let mut content = String::new();
     f.read_to_string(&mut content)?;
-    if let Some(version_line) = content.split("\n")
-        .filter(|line| line.contains("# VERSION:")).next() {
+    if let Some(version_line) =
+        content
+            .split("\n")
+            .filter(|line| line.contains("# VERSION:"))
+            .next()
+    {
 
-        return Ok(version_line
-            .split_whitespace()
-            .last().unwrap()
-            .to_owned());
+        return Ok(version_line.split_whitespace().last().unwrap().to_owned());
 
     }
-    Err(Box::new(io::Error::new(io::ErrorKind::InvalidData, "Unable to fetch the version line in the filter")))
+    Err(Box::new(io::Error::new(
+        io::ErrorKind::InvalidData,
+        "Unable to fetch the version line in the filter",
+    )))
 }
 
 /// Fetches and returns an existing filter version (if there are any existing
@@ -83,7 +96,10 @@ fn fetch_existing_filter_version() -> Result<String, Box<Error>> {
             }
         }
     }
-    Err(Box::new(io::Error::new(io::ErrorKind::Other, "No existing filters found")))
+    Err(Box::new(io::Error::new(
+        io::ErrorKind::Other,
+        "No existing filters found",
+    )))
 }
 
 fn remove_existing_filters(local_dir: &str) -> io::Result<()> {
@@ -98,10 +114,13 @@ fn remove_existing_filters(local_dir: &str) -> io::Result<()> {
     Ok(())
 }
 
-fn fetch_and_extract_new_version(local_dir: &str, latest_release: ReleaseInfo) -> Result<(), Box<Error>> {
+fn fetch_and_extract_new_version(
+    local_dir: &str,
+    latest_release: ReleaseInfo,
+) -> Result<(), Box<Error>> {
     // Fetch and parse the zipfile.
     println!("Fetching zip-file... ");
-    let zipfile = fetch_url_to_buffer(&latest_release.zip_url);
+    let zipfile = fetch_url_to_buffer(&latest_release.zip_url)?;
     println!("Fetched {} bytes, extracting filters...", zipfile.len());
 
     // Initialize reading the zipfile.
@@ -138,11 +157,8 @@ fn fetch_and_extract_new_version(local_dir: &str, latest_release: ReleaseInfo) -
 
 fn update_filter() -> Result<(), Box<Error>> {
     // Determine the directory on the filesystem, where PoE filters should live.
-    let local_dir = determine_poe_dir()?.into_os_string();
-    println!(
-        "PoE configuration directory is: \"{}\"",
-        local_dir.to_str().unwrap()
-    );
+    let local_dir = determine_poe_dir()?;
+    println!("PoE configuration directory is: \"{}\"", local_dir);
 
     // Look for existing neversink filter files.
     let current_version = match fetch_existing_filter_version() {
@@ -152,7 +168,7 @@ fn update_filter() -> Result<(), Box<Error>> {
 
     // Fetch and parse info about the latest release.
     println!("Fetching info about the latest release from Github...");
-    let latest_release = determine_latest_release();
+    let latest_release = determine_latest_release()?;
     println!("Current tagname:   {}", current_version);
     println!("Latest tagname:    {}", latest_release.tag_name);
     println!("Published at:      {}", latest_release.published_at);
@@ -162,11 +178,11 @@ fn update_filter() -> Result<(), Box<Error>> {
         println!("Latest version is already installed, doing nothing...");
     } else {
         println!("Removing existing filters...");
-        if let Err(err) = remove_existing_filters(local_dir.to_str().unwrap()) {
+        if let Err(err) = remove_existing_filters(&local_dir) {
             println!("Error: unable to remove existing filter files: {}", err);
         }
         println!("Fetching and extracting new filters.");
-        fetch_and_extract_new_version(local_dir.to_str().unwrap(), latest_release)?;
+        fetch_and_extract_new_version(&local_dir, latest_release)?;
     }
 
     println!("All done, press enter to close :)");
