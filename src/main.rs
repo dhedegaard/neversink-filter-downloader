@@ -123,10 +123,7 @@ fn remove_existing_filters(local_dir: &str) -> io::Result<()> {
     Ok(())
 }
 
-fn fetch_and_extract_new_version(
-    local_dir: &str,
-    latest_release: ReleaseInfo,
-) -> Result<(), Box<Error>> {
+fn fetch_and_extract_new_version(local_dir: &str, latest_release: ReleaseInfo) -> Result<(), Box<Error>> {
     // Fetch and parse the zipfile.
     println!("Fetching zip-file... ");
     let zipfile = fetch_url_to_buffer(&latest_release.zip_url)?;
