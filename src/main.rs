@@ -1,3 +1,4 @@
+extern crate colored;
 extern crate requests;
 extern crate zip;
 use std::env;
@@ -10,6 +11,7 @@ use std::io::Read;
 use std::path;
 use std::process;
 use requests::ToJson;
+use colored::*;
 
 /// API URL for the latest release.
 static LATEST_RELEASE_URL: &str = "https://api.github.com/repos/NeverSinkDev/NeverSink-Filter/releases/latest";
@@ -125,9 +127,9 @@ fn remove_existing_filters(local_dir: &str) -> io::Result<()> {
 
 fn fetch_and_extract_new_version(local_dir: &str, latest_release: ReleaseInfo) -> Result<(), Box<Error>> {
     // Fetch and parse the zipfile.
-    println!("Fetching zip-file... ");
+    println!("{}", "Fetching zip-file... ".bold());
     let zipfile = fetch_url_to_buffer(&latest_release.zip_url)?;
-    println!("Fetched {} bytes, extracting filters...", zipfile.len());
+    println!("Fetched {} bytes, extracting filters...", zipfile.len().to_string().bold());
 
     // Initialize reading the zipfile.
     let reader = Cursor::new(zipfile);
@@ -168,7 +170,7 @@ fn fetch_and_extract_new_version(local_dir: &str, latest_release: ReleaseInfo) -
 fn update_filter() -> Result<(), Box<Error>> {
     // Determine the directory on the filesystem, where PoE filters should live.
     let local_dir = determine_poe_dir()?;
-    println!("PoE configuration directory is: \"{}\"", local_dir);
+    println!("PoE configuration directory is: \"{}\"", local_dir.bold());
 
     // Look for existing neversink filter files.
     let current_version = match fetch_existing_filter_version() {
@@ -179,9 +181,9 @@ fn update_filter() -> Result<(), Box<Error>> {
     // Fetch and parse info about the latest release.
     println!("Fetching info about the latest release from Github...");
     let latest_release = determine_latest_release()?;
-    println!("Current tagname:   {}", current_version);
-    println!("Latest tagname:    {}", latest_release.tag_name);
-    println!("Published at:      {}", latest_release.published_at);
+    println!("Current tagname:   {}", current_version.bold());
+    println!("Latest tagname:    {}", latest_release.tag_name.bold());
+    println!("Published at:      {}", latest_release.published_at.bold());
     println!("");
 
     // If the tag names are equal, then return.
@@ -196,7 +198,7 @@ fn update_filter() -> Result<(), Box<Error>> {
     println!("Fetching and extracting new filters.");
     fetch_and_extract_new_version(&local_dir, latest_release)?;
 
-    println!("All done");
+    println!("{}", "All done".bold());
     Ok(())
 }
 
@@ -208,7 +210,7 @@ fn main() {
 
     if cfg!(windows) {
         // Let the user read the output before closing, for cmd on windows :)
-        println!("Press enter to close :)");
+        println!("{}", "Press enter to close :)".bold());
         let stdin = io::stdin();
         let mut line = String::new();
         stdin.lock().read_line(&mut line).unwrap_or_default();

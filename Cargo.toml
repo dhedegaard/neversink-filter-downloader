@@ -6,3 +6,4 @@ authors = ["Dennis Hedegaard <dennis@dhedegaard.dk>"]
 [dependencies]
 requests = "0.0.30"
 zip = "0.2.5"
+colored = "1.5.2"
