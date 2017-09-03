@@ -1,5 +1,5 @@
-extern crate colored;
 extern crate requests;
+extern crate term_painter;
 extern crate zip;
 use std::env;
 use std::error::Error;
@@ -11,7 +11,8 @@ use std::io::Read;
 use std::path;
 use std::process;
 use requests::ToJson;
-use colored::*;
+use term_painter::ToStyle;
+use term_painter::Color::BrightWhite;
 
 /// API URL for the latest release.
 static LATEST_RELEASE_URL: &str = "https://api.github.com/repos/NeverSinkDev/NeverSink-Filter/releases/latest";
@@ -127,9 +128,9 @@ fn remove_existing_filters(local_dir: &str) -> io::Result<()> {
 
 fn fetch_and_extract_new_version(local_dir: &str, latest_release: ReleaseInfo) -> Result<(), Box<Error>> {
     // Fetch and parse the zipfile.
-    println!("{}", "Fetching zip-file... ".bold());
+    println!("{}", BrightWhite.bold().paint("Fetching zip-file... "));
     let zipfile = fetch_url_to_buffer(&latest_release.zip_url)?;
-    println!("Fetched {} bytes, extracting filters...", zipfile.len().to_string().bold());
+    println!("Fetched {} bytes, extracting filters...", BrightWhite.bold().paint(zipfile.len().to_string()));
 
     // Initialize reading the zipfile.
     let reader = Cursor::new(zipfile);
@@ -141,7 +142,7 @@ fn fetch_and_extract_new_version(local_dir: &str, latest_release: ReleaseInfo) -
         let mut file = zipfile.by_index(i)?;
 
         // Skip files that are not .filter, or not in the root of the zipfile.
-        let filename = file.name().to_string();
+        let filename = file.name().to_owned();
         let path = path::Path::new(&filename);
         if path.extension().is_none() || path.extension().unwrap() != "filter" ||
             path.parent().unwrap().parent().unwrap() != empty_path
@@ -170,20 +171,20 @@ fn fetch_and_extract_new_version(local_dir: &str, latest_release: ReleaseInfo) -
 fn update_filter() -> Result<(), Box<Error>> {
     // Determine the directory on the filesystem, where PoE filters should live.
     let local_dir = determine_poe_dir()?;
-    println!("PoE configuration directory is: \"{}\"", local_dir.bold());
+    println!("PoE configuration directory is: \"{}\"", BrightWhite.bold().paint(local_dir.to_string()));
 
     // Look for existing neversink filter files.
     let current_version = match fetch_existing_filter_version() {
         Ok(version) => version,
-        Err(err) => format!("<Err: {}>", err),
+        Err(err) => format!("<{}>", err),
     };
 
     // Fetch and parse info about the latest release.
     println!("Fetching info about the latest release from Github...");
     let latest_release = determine_latest_release()?;
-    println!("Current tagname:   {}", current_version.bold());
-    println!("Latest tagname:    {}", latest_release.tag_name.bold());
-    println!("Published at:      {}", latest_release.published_at.bold());
+    println!("Current tagname:   {}", BrightWhite.bold().paint(&current_version));
+    println!("Latest tagname:    {}", BrightWhite.bold().paint(&latest_release.tag_name));
+    println!("Published at:      {}", BrightWhite.bold().paint(&latest_release.published_at));
     println!("");
 
     // If the tag names are equal, then return.
@@ -198,7 +199,7 @@ fn update_filter() -> Result<(), Box<Error>> {
     println!("Fetching and extracting new filters.");
     fetch_and_extract_new_version(&local_dir, latest_release)?;
 
-    println!("{}", "All done".bold());
+    println!("{}", BrightWhite.bold().paint("All done"));
     Ok(())
 }
 
@@ -210,7 +211,7 @@ fn main() {
 
     if cfg!(windows) {
         // Let the user read the output before closing, for cmd on windows :)
-        println!("{}", "Press enter to close :)".bold());
+        println!("{}", BrightWhite.bold().paint("Press enter to close :)"));
         let stdin = io::stdin();
         let mut line = String::new();
         stdin.lock().read_line(&mut line).unwrap_or_default();
