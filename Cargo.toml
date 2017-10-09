@@ -14,5 +14,5 @@ term-painter = "0.2.4"
 winres = "0.1"
 
 [package.metadata.winres]
-OriginalFilename = "neversink-loot-filter.exe"
+OriginalFilename = "neversink-filter-downloader.exe"
 ProductName = "NeverSink Lootfilter Downloader"
