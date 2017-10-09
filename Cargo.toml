@@ -2,9 +2,17 @@
 name = "neversink-filter-downloader"
 version = "0.2.3"
 authors = ["Dennis Hedegaard <dennis@dhedegaard.dk>"]
+build = "build.rs"
 
 [dependencies]
 requests = "0.0.30"
 zip = "0.2.5"
 colored = "1.5.2"
 term-painter = "0.2.4"
+
+[build-dependencies]
+winres = "0.1"
+
+[package.metadata.winres]
+OriginalFilename = "neversink-loot-filter.exe"
+ProductName = "NeverSink Lootfilter Downloader"
