@@ -1,3 +1,4 @@
+extern crate chrono;
 extern crate requests;
 extern crate term_painter;
 extern crate zip;
@@ -182,9 +183,14 @@ fn update_filter() -> Result<(), Box<Error>> {
     // Fetch and parse info about the latest release.
     println!("Fetching info about the latest release from Github...");
     let latest_release = determine_latest_release()?;
+    // Extract the published date as RFC3339, convert it to the local timezone
+    // and convert it to a pretty printable.
+    let published_at = chrono::DateTime::parse_from_rfc3339(&latest_release.published_at)?;
+    let published_at = published_at.with_timezone(&chrono::Local);
+    let published_at = published_at.format("%Y-%m-%d %H:%M:%S");
     println!("Current tagname:   {}", BrightWhite.bold().paint(&current_version));
     println!("Latest tagname:    {}", BrightWhite.bold().paint(&latest_release.tag_name));
-    println!("Published at:      {}", BrightWhite.bold().paint(&latest_release.published_at));
+    println!("Published at:      {}", BrightWhite.bold().paint(&published_at));
     println!("");
 
     // If the tag names are equal, then return.

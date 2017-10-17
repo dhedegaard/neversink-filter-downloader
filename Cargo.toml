@@ -9,6 +9,7 @@ requests = "0.0.30"
 zip = "0.2.5"
 colored = "1.5.2"
 term-painter = "0.2.4"
+chrono = "0.4"
 
 [build-dependencies]
 winres = "0.1"
