@@ -19,6 +19,10 @@ environment:
     - TARGET: x86_64-pc-windows-msvc
       CHANNEL: nightly
 
+image:
+- Visual Studio 2015
+- Visual Studio 2017
+
 # Install Rust and Cargo
 # (Based on from https://github.com/rust-lang/libc/blob/master/appveyor.yml)
 install:
@@ -49,7 +53,6 @@ before_deploy:
   - appveyor PushArtifact ../%PROJECT_NAME%-%APPVEYOR_REPO_TAG_NAME%-%TARGET%.zip
 
 deploy:
-  description: 'Windows release'
   # All the zipped artifacts will be deployed
   artifact: /.*\.zip/
   auth_token:
