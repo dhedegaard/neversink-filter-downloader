@@ -1,7 +1,13 @@
+#[macro_use]
+extern crate serde_derive;
+
 extern crate chrono;
-extern crate requests;
+extern crate reqwest;
+extern crate serde;
+extern crate serde_json;
 extern crate term_painter;
 extern crate zip;
+
 use std::env;
 use std::error::Error;
 use std::fs;
@@ -11,46 +17,34 @@ use std::io::Cursor;
 use std::io::Read;
 use std::path;
 use std::process;
-use requests::ToJson;
+
 use term_painter::ToStyle;
 use term_painter::Color::BrightWhite;
 
 /// API URL for the latest release.
-static LATEST_RELEASE_URL: &str = "https://api.github.com/repos/NeverSinkDev/NeverSink-Filter/releases/latest";
+const LATEST_RELEASE_URL: &'static str =
+    "https://api.github.com/repos/NeverSinkDev/NeverSink-Filter/releases/latest";
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 struct ReleaseInfo {
     tag_name: String,
     published_at: String,
-    zip_url: String,
+    zipball_url: String,
 }
 
 /// Determines and returns info about the latest release available.
 fn determine_latest_release() -> Result<ReleaseInfo, Box<Error>> {
     // Fetch the URL and parse the JSON.
-    let data = requests::get(LATEST_RELEASE_URL)?.json()?;
-
-    // Check that we've got the required fields in the JSON data.
-    for field_name in vec!["tag_name", "published_at", "zipball_url"] {
-        if !data[field_name].is_string() {
-            return Err(Box::new(io::Error::new(
-                io::ErrorKind::InvalidData,
-                format!("Missing required field in JSON data: {}", field_name),
-            )));
-        }
-    }
-
-    // Now we know the required fields are available, unwrap() and return.
-    Ok(ReleaseInfo {
-        tag_name: data["tag_name"].as_str().unwrap().to_string(),
-        published_at: data["published_at"].as_str().unwrap().to_string(),
-        zip_url: data["zipball_url"].as_str().unwrap().to_string(),
-    })
+    reqwest::get(LATEST_RELEASE_URL)?
+        .json()
+        .map_err(|e| e.into())
 }
 
 /// Fetches the given URL, returning the body as a string.
 fn fetch_url_to_buffer(url: &str) -> Result<Vec<u8>, Box<Error>> {
-    Ok(requests::get(url)?.content().to_owned())
+    let mut result = vec![];
+    reqwest::get(url)?.read_to_end(&mut result)?;
+    Ok(result)
 }
 
 /// Determines and returns a path object pointing to the PoE configuration
@@ -64,7 +58,11 @@ fn determine_poe_dir() -> Result<String, Box<Error>> {
         )));
     }
 
-    let poedir = homedir.unwrap().join("Documents").join("My Games").join("Path of Exile");
+    let poedir = homedir
+        .unwrap()
+        .join("Documents")
+        .join("My Games")
+        .join("Path of Exile");
     if !poedir.exists() {
         return Err(Box::new(io::Error::new(
             io::ErrorKind::NotFound,
@@ -84,9 +82,9 @@ fn read_filter_version_from_string(filename: path::PathBuf) -> Result<String, Bo
     let mut content = String::new();
     f.read_to_string(&mut content)?;
     if let Some(version_line) = content
-            .split("\n")
-            .filter(|line| line.contains("# VERSION:"))
-            .next()
+        .split("\n")
+        .filter(|line| line.contains("# VERSION:"))
+        .next()
     {
         if let Some(version_str) = version_line.split_whitespace().last() {
             return Ok(version_str.to_owned());
@@ -127,11 +125,17 @@ fn remove_existing_filters(local_dir: &str) -> io::Result<()> {
     Ok(())
 }
 
-fn fetch_and_extract_new_version(local_dir: &str, latest_release: ReleaseInfo) -> Result<(), Box<Error>> {
+fn fetch_and_extract_new_version(
+    local_dir: &str,
+    latest_release: ReleaseInfo,
+) -> Result<(), Box<Error>> {
     // Fetch and parse the zipfile.
     println!("{}", BrightWhite.bold().paint("Fetching zip-file... "));
-    let zipfile = fetch_url_to_buffer(&latest_release.zip_url)?;
-    println!("Fetched {} bytes, extracting filters...", BrightWhite.bold().paint(zipfile.len().to_string()));
+    let zipfile = fetch_url_to_buffer(&latest_release.zipball_url)?;
+    println!(
+        "Fetched {} bytes, extracting filters...",
+        BrightWhite.bold().paint(zipfile.len().to_string())
+    );
 
     // Initialize reading the zipfile.
     let reader = Cursor::new(zipfile);
@@ -145,8 +149,8 @@ fn fetch_and_extract_new_version(local_dir: &str, latest_release: ReleaseInfo) -
         // Skip files that are not .filter, or not in the root of the zipfile.
         let filename = file.name().to_owned();
         let path = path::Path::new(&filename);
-        if path.extension().is_none() || path.extension().unwrap() != "filter" ||
-            path.parent().unwrap().parent().unwrap() != empty_path
+        if path.extension().is_none() || path.extension().unwrap() != "filter"
+            || path.parent().unwrap().parent().unwrap() != empty_path
         {
             continue;
         }
@@ -172,7 +176,10 @@ fn fetch_and_extract_new_version(local_dir: &str, latest_release: ReleaseInfo) -
 fn update_filter() -> Result<(), Box<Error>> {
     // Determine the directory on the filesystem, where PoE filters should live.
     let local_dir = determine_poe_dir()?;
-    println!("PoE configuration directory is: \"{}\"", BrightWhite.bold().paint(local_dir.to_string()));
+    println!(
+        "PoE configuration directory is: \"{}\"",
+        BrightWhite.bold().paint(local_dir.to_string())
+    );
 
     // Look for existing neversink filter files.
     let current_version = match fetch_existing_filter_version() {
@@ -188,9 +195,18 @@ fn update_filter() -> Result<(), Box<Error>> {
     let published_at = chrono::DateTime::parse_from_rfc3339(&latest_release.published_at)?;
     let published_at = published_at.with_timezone(&chrono::Local);
     let published_at = published_at.format("%Y-%m-%d %H:%M:%S");
-    println!("Current tagname:   {}", BrightWhite.bold().paint(&current_version));
-    println!("Latest tagname:    {}", BrightWhite.bold().paint(&latest_release.tag_name));
-    println!("Published at:      {}", BrightWhite.bold().paint(&published_at));
+    println!(
+        "Current tagname:   {}",
+        BrightWhite.bold().paint(&current_version)
+    );
+    println!(
+        "Latest tagname:    {}",
+        BrightWhite.bold().paint(&latest_release.tag_name)
+    );
+    println!(
+        "Published at:      {}",
+        BrightWhite.bold().paint(&published_at)
+    );
     println!("");
 
     // If the tag names are equal, then return.
