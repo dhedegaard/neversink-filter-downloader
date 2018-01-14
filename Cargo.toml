@@ -1,6 +1,6 @@
 [package]
 name = "neversink-filter-downloader"
-version = "0.2.4"
+version = "0.2.6"
 authors = ["Dennis Hedegaard <dennis@dhedegaard.dk>"]
 build = "build.rs"
 
