@@ -5,10 +5,10 @@ authors = ["Dennis Hedegaard <dennis@dhedegaard.dk>"]
 build = "build.rs"
 
 [dependencies]
-reqwest = "^0.8"
-serde = "^1.0"
-serde_derive = "^1.0"
-serde_json = "^1.0"
+reqwest = "^0.6"
+serde = "*"
+serde_derive = "*"
+serde_json = "*"
 zip = "^0.2"
 colored = "^1.5"
 term-painter = "^0.2"
