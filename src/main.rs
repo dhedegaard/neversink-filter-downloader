@@ -64,13 +64,11 @@ fn determine_poe_dir() -> Result<String, Box<Error>> {
         .join("My Games")
         .join("Path of Exile");
     if !poedir.exists() {
-        return Err(Box::new(io::Error::new(
-            io::ErrorKind::NotFound,
-            format!(
-                "The expected PoE directory does not exist: {}",
-                poedir.to_str().unwrap()
-            ),
-        )));
+        fs::create_dir_all(&poedir)?;
+        println!(
+            "The expected PoE directory did not exist, so it was created: {}",
+            &poedir.to_str().unwrap()
+        );
     }
 
     Ok(poedir.to_str().unwrap().to_owned())
