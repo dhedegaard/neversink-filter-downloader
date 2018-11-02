@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate serde_derive;
+extern crate dirs;
 
 extern crate chrono;
 extern crate reqwest;
@@ -50,7 +51,7 @@ fn fetch_url_to_buffer(url: &str) -> Result<Vec<u8>, Box<Error>> {
 /// Determines and returns a path object pointing to the PoE configuration
 /// directory.
 fn determine_poe_dir() -> Result<String, Box<Error>> {
-    let homedir = env::home_dir();
+    let homedir = dirs::home_dir();
     if homedir.is_none() {
         return Err(Box::new(io::Error::new(
             io::ErrorKind::NotFound,
