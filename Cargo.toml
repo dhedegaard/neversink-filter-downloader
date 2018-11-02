@@ -14,7 +14,7 @@ colored = "^1.5"
 term-painter = "^0.2"
 chrono = "^0.4"
 
-[build-dependencies]
+[target.'cfg(windows)'.build-dependencies]
 winres = "^0.1"
 
 [package.metadata.winres]
