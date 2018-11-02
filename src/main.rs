@@ -206,7 +206,7 @@ fn update_filter() -> Result<(), Box<Error>> {
         "Published at:      {}",
         BrightWhite.bold().paint(&published_at)
     );
-    println!("");
+    println!();
 
     // If the tag names are equal, then return.
     if current_version == latest_release.tag_name {
