@@ -5,18 +5,18 @@ authors = ["Dennis Hedegaard <dennis@dhedegaard.dk>"]
 build = "build.rs"
 
 [dependencies]
-reqwest = "^0.6"
+reqwest = "^0.9.4"
 serde = "*"
 serde_derive = "*"
 serde_json = "*"
-zip = "^0.2"
-colored = "^1.5"
-term-painter = "^0.2"
-chrono = "^0.4"
+zip = "^0.4.2"
+colored = "^1.6.1"
+term-painter = "^0.2.4"
+chrono = "^0.4.6"
 dirs = "^1.0.4"
 
 [target.'cfg(windows)'.build-dependencies]
-winres = "^0.1"
+winres = "^0.1.6"
 
 [package.metadata.winres]
 OriginalFilename = "neversink-filter-downloader.exe"
