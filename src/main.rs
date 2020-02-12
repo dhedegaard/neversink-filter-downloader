@@ -19,8 +19,8 @@ use std::io::Read;
 use std::path;
 use std::process;
 
-use term_painter::ToStyle;
 use term_painter::Color::BrightWhite;
+use term_painter::ToStyle;
 
 /// API URL for the latest release.
 const LATEST_RELEASE_URL: &'static str =
@@ -34,7 +34,7 @@ struct ReleaseInfo {
 }
 
 /// Determines and returns info about the latest release available.
-fn determine_latest_release() -> Result<ReleaseInfo, Box<Error>> {
+fn determine_latest_release() -> Result<ReleaseInfo, Box<dyn Error>> {
     // Fetch the URL and parse the JSON.
     reqwest::get(LATEST_RELEASE_URL)?
         .json()
@@ -42,7 +42,7 @@ fn determine_latest_release() -> Result<ReleaseInfo, Box<Error>> {
 }
 
 /// Fetches the given URL, returning the body as a string.
-fn fetch_url_to_buffer(url: &str) -> Result<Vec<u8>, Box<Error>> {
+fn fetch_url_to_buffer(url: &str) -> Result<Vec<u8>, Box<dyn Error>> {
     let mut result = vec![];
     reqwest::get(url)?.read_to_end(&mut result)?;
     Ok(result)
@@ -50,7 +50,7 @@ fn fetch_url_to_buffer(url: &str) -> Result<Vec<u8>, Box<Error>> {
 
 /// Determines and returns a path object pointing to the PoE configuration
 /// directory.
-fn determine_poe_dir() -> Result<String, Box<Error>> {
+fn determine_poe_dir() -> Result<String, Box<dyn Error>> {
     let homedir = dirs::home_dir();
     if homedir.is_none() {
         return Err(Box::new(io::Error::new(
@@ -76,7 +76,7 @@ fn determine_poe_dir() -> Result<String, Box<Error>> {
 }
 
 /// Reads and returns the version value from the filename specified.
-fn read_filter_version_from_string(filename: path::PathBuf) -> Result<String, Box<Error>> {
+fn read_filter_version_from_string(filename: path::PathBuf) -> Result<String, Box<dyn Error>> {
     let mut f = fs::File::open(filename)?;
     let mut content = String::new();
     f.read_to_string(&mut content)?;
@@ -97,7 +97,7 @@ fn read_filter_version_from_string(filename: path::PathBuf) -> Result<String, Bo
 
 /// Fetches and returns an existing filter version (if there are any existing
 /// filter files).
-fn fetch_existing_filter_version() -> Result<String, Box<Error>> {
+fn fetch_existing_filter_version() -> Result<String, Box<dyn Error>> {
     for path in fs::read_dir(determine_poe_dir()?)? {
         let path = path?;
         if let Some(filename) = path.file_name().to_str() {
@@ -127,7 +127,7 @@ fn remove_existing_filters(local_dir: &str) -> io::Result<()> {
 fn fetch_and_extract_new_version(
     local_dir: &str,
     latest_release: ReleaseInfo,
-) -> Result<(), Box<Error>> {
+) -> Result<(), Box<dyn Error>> {
     // Fetch and parse the zipfile.
     println!("{}", BrightWhite.bold().paint("Fetching zip-file... "));
     let zipfile = fetch_url_to_buffer(&latest_release.zipball_url)?;
@@ -148,7 +148,8 @@ fn fetch_and_extract_new_version(
         // Skip files that are not .filter, or not in the root of the zipfile.
         let filename = file.name().to_owned();
         let path = path::Path::new(&filename);
-        if path.extension().is_none() || path.extension().unwrap() != "filter"
+        if path.extension().is_none()
+            || path.extension().unwrap() != "filter"
             || path.parent().unwrap().parent().unwrap() != empty_path
         {
             continue;
@@ -172,7 +173,7 @@ fn fetch_and_extract_new_version(
     Ok(())
 }
 
-fn update_filter() -> Result<(), Box<Error>> {
+fn update_filter() -> Result<(), Box<dyn Error>> {
     // Determine the directory on the filesystem, where PoE filters should live.
     let local_dir = determine_poe_dir()?;
     println!(
