@@ -51,19 +51,15 @@ fn fetch_url_to_buffer(url: &str) -> Result<Vec<u8>, Box<dyn Error>> {
 /// Determines and returns a path object pointing to the PoE configuration
 /// directory.
 fn determine_poe_dir() -> Result<String, Box<dyn Error>> {
-    let homedir = dirs::home_dir();
-    if homedir.is_none() {
+    let documents = dirs::document_dir();
+    if documents.is_none() {
         return Err(Box::new(io::Error::new(
             io::ErrorKind::NotFound,
             "Unable to find the homedir for the user.",
         )));
     }
 
-    let poedir = homedir
-        .unwrap()
-        .join("Documents")
-        .join("My Games")
-        .join("Path of Exile");
+    let poedir = documents.unwrap().join("My Games").join("Path of Exile");
     if !poedir.exists() {
         fs::create_dir_all(&poedir)?;
         println!(
