@@ -48,18 +48,22 @@ fn fetch_url_to_buffer(url: &str) -> Result<Vec<u8>, Box<dyn Error>> {
     Ok(result)
 }
 
+fn determine_documents_dir() -> std::path::PathBuf {
+    if let Some(documents) = dirs::document_dir() {
+        return documents.clone();
+    }
+    if let Some(homedir) = dirs::home_dir() {
+        return homedir.join("Documents");
+    }
+    panic!("Unable to find homedir for user.");
+}
+
 /// Determines and returns a path object pointing to the PoE configuration
 /// directory.
 fn determine_poe_dir() -> Result<String, Box<dyn Error>> {
-    let documents = dirs::document_dir();
-    if documents.is_none() {
-        return Err(Box::new(io::Error::new(
-            io::ErrorKind::NotFound,
-            "Unable to find the homedir for the user.",
-        )));
-    }
+    let documents = determine_documents_dir();
 
-    let poedir = documents.unwrap().join("My Games").join("Path of Exile");
+    let poedir = documents.join("My Games").join("Path of Exile");
     if !poedir.exists() {
         fs::create_dir_all(&poedir)?;
         println!(
@@ -237,5 +241,15 @@ fn main() {
             let mut line = String::new();
             stdin.lock().read_line(&mut line).unwrap_or_default();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_determine_documents_dir_should_return_something() {
+        assert!(determine_documents_dir().to_string_lossy().len() > 0);
     }
 }
