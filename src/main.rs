@@ -49,13 +49,13 @@ fn fetch_url_to_buffer(url: &str) -> Result<Vec<u8>, Box<dyn Error>> {
 }
 
 fn determine_documents_dir() -> std::path::PathBuf {
-    if let Some(documents) = dirs::document_dir() {
-        return documents.clone();
+    match dirs::document_dir() {
+        Some(documents) => documents.clone(),
+        None => match dirs::home_dir() {
+            Some(homedir) => homedir.join("Documents"),
+            None => panic!("Unable to find homedir for user."),
+        },
     }
-    if let Some(homedir) = dirs::home_dir() {
-        return homedir.join("Documents");
-    }
-    panic!("Unable to find homedir for user.");
 }
 
 /// Determines and returns a path object pointing to the PoE configuration
