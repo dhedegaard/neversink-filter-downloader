@@ -21,3 +21,8 @@ winres = "^0.1.6"
 [package.metadata.winres]
 OriginalFilename = "neversink-filter-downloader.exe"
 ProductName = "NeverSink Lootfilter Downloader"
+
+[profile.release]
+opt-level = 'z'
+lto = true
+codegen-units = 1
