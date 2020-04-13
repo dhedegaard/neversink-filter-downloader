@@ -173,7 +173,7 @@ fn fetch_and_extract_new_version(
     Ok(())
 }
 
-fn update_filter() -> Result<(), Box<dyn Error>> {
+fn update_filter(force: bool) -> Result<(), Box<dyn Error>> {
     // Determine the directory on the filesystem, where PoE filters should live.
     let local_dir = determine_poe_dir()?;
     println!(
@@ -210,7 +210,7 @@ fn update_filter() -> Result<(), Box<dyn Error>> {
     println!();
 
     // If the tag names are equal, then return.
-    if current_version == latest_release.tag_name {
+    if current_version == latest_release.tag_name && !force {
         println!("Latest version is already installed, doing nothing...");
         return Ok(());
     }
@@ -226,7 +226,9 @@ fn update_filter() -> Result<(), Box<dyn Error>> {
 }
 
 fn main() {
-    if let Err(err) = update_filter() {
+    let force = std::env::args().any(|e| e == "-f");
+
+    if let Err(err) = update_filter(force) {
         println!("Error updating filter: {}", err);
         process::exit(1);
     }
