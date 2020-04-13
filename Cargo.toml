@@ -1,6 +1,6 @@
 [package]
 name = "neversink-filter-downloader"
-version = "0.2.14"
+version = "0.2.15"
 authors = ["Dennis Hedegaard <dennis@dhedegaard.dk>"]
 build = "build.rs"
 
@@ -14,7 +14,6 @@ colored = "^1.6.1"
 term-painter = "^0.2.4"
 chrono = "^0.4.6"
 dirs = "^2.0.2"
-number_prefix = "0.4"
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "^0.1.6"
