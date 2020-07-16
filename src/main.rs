@@ -1,14 +1,14 @@
-#[macro_use]
-extern crate serde_derive;
-extern crate dirs;
-
 extern crate chrono;
+extern crate dirs;
 extern crate reqwest;
 extern crate serde;
+extern crate serde_derive;
 extern crate serde_json;
 extern crate term_painter;
 extern crate zip;
 
+mod lib;
+use lib::*;
 use std::env;
 use std::error::Error;
 use std::fs;
@@ -21,59 +21,6 @@ use std::process;
 
 use term_painter::Color::BrightWhite;
 use term_painter::ToStyle;
-
-/// API URL for the latest release.
-const LATEST_RELEASE_URL: &'static str =
-    "https://api.github.com/repos/NeverSinkDev/NeverSink-Filter/releases/latest";
-
-#[derive(Debug, Deserialize)]
-struct ReleaseInfo {
-    tag_name: String,
-    published_at: String,
-    zipball_url: String,
-}
-
-/// Determines and returns info about the latest release available.
-fn determine_latest_release() -> Result<ReleaseInfo, Box<dyn Error>> {
-    // Fetch the URL and parse the JSON.
-    reqwest::get(LATEST_RELEASE_URL)?
-        .json()
-        .map_err(|e| e.into())
-}
-
-/// Fetches the given URL, returning the body as a string.
-fn fetch_url_to_buffer(url: &str) -> Result<Vec<u8>, Box<dyn Error>> {
-    let mut result = vec![];
-    reqwest::get(url)?.read_to_end(&mut result)?;
-    Ok(result)
-}
-
-fn determine_documents_dir() -> std::path::PathBuf {
-    match dirs::document_dir() {
-        Some(documents) => documents.clone(),
-        None => match dirs::home_dir() {
-            Some(homedir) => homedir.join("Documents"),
-            None => panic!("Unable to find homedir for user."),
-        },
-    }
-}
-
-/// Determines and returns a path object pointing to the PoE configuration
-/// directory.
-fn determine_poe_dir() -> Result<String, Box<dyn Error>> {
-    let documents = determine_documents_dir();
-
-    let poedir = documents.join("My Games").join("Path of Exile");
-    if !poedir.exists() {
-        fs::create_dir_all(&poedir)?;
-        println!(
-            "The expected PoE directory did not exist, so it was created: {}",
-            &poedir.to_str().unwrap()
-        );
-    }
-
-    Ok(poedir.to_str().unwrap().to_owned())
-}
 
 /// Reads and returns the version value from the filename specified.
 fn read_filter_version_from_string(filename: path::PathBuf) -> Result<String, Box<dyn Error>> {
@@ -98,7 +45,14 @@ fn read_filter_version_from_string(filename: path::PathBuf) -> Result<String, Bo
 /// Fetches and returns an existing filter version (if there are any existing
 /// filter files).
 fn fetch_existing_filter_version() -> Result<String, Box<dyn Error>> {
-    for path in fs::read_dir(determine_poe_dir()?)? {
+    let poedir = determine_poe_dir()?;
+    if poedir.directory_created {
+        println!(
+            "The expected PoE directory did not exist, so it was created: {}",
+            poedir.poedir
+        );
+    }
+    for path in fs::read_dir(poedir.poedir)? {
         let path = path?;
         if let Some(filename) = path.file_name().to_str() {
             if filename.contains("NeverSink") && filename.contains(".filter") {
@@ -178,7 +132,7 @@ fn update_filter(force: bool) -> Result<(), Box<dyn Error>> {
     let local_dir = determine_poe_dir()?;
     println!(
         "PoE configuration directory is: \"{}\"",
-        BrightWhite.bold().paint(local_dir.to_string())
+        BrightWhite.bold().paint(&local_dir.poedir)
     );
 
     // Look for existing neversink filter files.
@@ -216,10 +170,10 @@ fn update_filter(force: bool) -> Result<(), Box<dyn Error>> {
     }
 
     println!("Removing existing filters...");
-    remove_existing_filters(&local_dir)?;
+    remove_existing_filters(&local_dir.poedir)?;
 
     println!("Fetching and extracting new filters.");
-    fetch_and_extract_new_version(&local_dir, latest_release)?;
+    fetch_and_extract_new_version(&local_dir.poedir, latest_release)?;
 
     println!("{}", BrightWhite.bold().paint("All done"));
     Ok(())
