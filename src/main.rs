@@ -9,74 +9,18 @@ extern crate zip;
 
 mod lib;
 use lib::*;
+
 use std::env;
 use std::error::Error;
 use std::fs;
 use std::io;
 use std::io::BufRead;
 use std::io::Cursor;
-use std::io::Read;
 use std::path;
 use std::process;
 
 use term_painter::Color::BrightWhite;
 use term_painter::ToStyle;
-
-/// Reads and returns the version value from the filename specified.
-fn read_filter_version_from_string(filename: path::PathBuf) -> Result<String, Box<dyn Error>> {
-    let mut f = fs::File::open(filename)?;
-    let mut content = String::new();
-    f.read_to_string(&mut content)?;
-    if let Some(version_line) = content
-        .split("\n")
-        .filter(|line| line.contains("# VERSION:"))
-        .next()
-    {
-        if let Some(version_str) = version_line.split_whitespace().last() {
-            return Ok(version_str.to_owned());
-        }
-    }
-    Err(Box::new(io::Error::new(
-        io::ErrorKind::InvalidData,
-        "Unable to fetch the version line in the filter",
-    )))
-}
-
-/// Fetches and returns an existing filter version (if there are any existing
-/// filter files).
-fn fetch_existing_filter_version() -> Result<String, Box<dyn Error>> {
-    let poedir = determine_poe_dir()?;
-    if poedir.directory_created {
-        println!(
-            "The expected PoE directory did not exist, so it was created: {}",
-            poedir.poedir
-        );
-    }
-    for path in fs::read_dir(poedir.poedir)? {
-        let path = path?;
-        if let Some(filename) = path.file_name().to_str() {
-            if filename.contains("NeverSink") && filename.contains(".filter") {
-                return read_filter_version_from_string(path.path());
-            }
-        }
-    }
-    Err(Box::new(io::Error::new(
-        io::ErrorKind::Other,
-        "No existing filters found",
-    )))
-}
-
-fn remove_existing_filters(local_dir: &str) -> io::Result<()> {
-    for path in fs::read_dir(local_dir)? {
-        let path = path?;
-        if let Some(filename) = path.file_name().to_str() {
-            if filename.contains("NeverSink") && filename.contains(".filter") {
-                fs::remove_file(path.path())?;
-            }
-        }
-    }
-    Ok(())
-}
 
 fn fetch_and_extract_new_version(
     local_dir: &str,
@@ -137,8 +81,16 @@ fn update_filter(force: bool) -> Result<(), Box<dyn Error>> {
 
     // Look for existing neversink filter files.
     let current_version = match fetch_existing_filter_version() {
-        Ok(version) => version,
-        Err(err) => format!("<{}>", err),
+        Ok(result) => {
+            if result.created_directory {
+                println!(
+                    "The expected PoE directory did not exist, so it was created: {}",
+                    result.poedir
+                );
+            }
+            result.poedir.clone()
+        }
+        Err(err) => format!("<{}>", err).to_string(),
     };
 
     // Fetch and parse info about the latest release.
