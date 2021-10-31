@@ -1,14 +1,15 @@
 name: Release
 
-on:
-  push:
-    tags:
-      - "*"
+# on:
+#   push:
+#     tags:
+#       - "*"
+on: [push]
 
 jobs:
   build:
     name: Create Release
-    runs-on: windows-latest
+    runs-on: ubuntu-latest # windows-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
