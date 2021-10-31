@@ -42,11 +42,12 @@ jobs:
         uses: thedoctor0/zip-release@master
         with:
           type: "zip"
-          filename: "release.zip"
+          filename: "neversink-filter-downloader.zip"
           path: "./release"
+          exclusions: "target"
 
       - name: Upload Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "release.zip"
+          artifacts: "neversink-filter-downloader.zip"
           token: ${{ secrets.GITHUB_TOKEN }}
