@@ -3,8 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - '*'
-
+      - "*"
 
 jobs:
   build:
@@ -30,15 +29,17 @@ jobs:
       - name: Run the program
         run: cargo run --release -- -q
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+      - name: Archive Release
+        uses: thedoctor0/zip-release@master
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body: |
-            Release ${{ github.ref }}
-          draft: false
-          prerelease: false
+          type: "zip"
+          filename: "release.zip"
+          directory: "target/release"
+          path: "neversink-filter-downloader.exe"
+          exclusions: "*.git* /*node_modules/* .editorconfig"
+
+      - name: Upload Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "release.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
