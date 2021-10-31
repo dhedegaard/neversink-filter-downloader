@@ -23,6 +23,7 @@ winres = "^0.1"
 [package.metadata.winres]
 OriginalFilename = "neversink-filter-downloader.exe"
 ProductName = "NeverSink Lootfilter Downloader"
+LegalCopyright = "Copyright © 2021 Dennis Hedegaard"
 
 [profile.release]
 opt-level = 'z'
