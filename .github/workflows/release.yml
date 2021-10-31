@@ -32,9 +32,9 @@ jobs:
 
       - name: Copy release to release folder
         run: |
-          mkdir -p release
-          cp -vf target/release/neversink-filter-downloader.exe ./release/.
-          cp -vf target/release/neversink-filter-downloader ./release/.
+          bash -c "mkdir -p release"
+          bash -c "cp -vf target/release/neversink-filter-downloader.exe ./release/."
+          bash -c "cp -vf target/release/neversink-filter-downloader ./release/."
 
       - name: Archive Release
         uses: thedoctor0/zip-release@master
@@ -42,7 +42,6 @@ jobs:
           type: "zip"
           filename: "release.zip"
           path: "./release"
-          exclusions: "*.git* /*node_modules/* .editorconfig"
 
       - name: Upload Release
         uses: ncipollo/release-action@v1
