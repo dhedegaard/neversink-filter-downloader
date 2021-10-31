@@ -88,9 +88,9 @@ fn update_filter(force: bool) -> Result<(), Box<dyn Error>> {
                     result.poedir
                 );
             }
-            result.poedir.clone()
+            result.poedir
         }
-        Err(err) => format!("<{}>", err).to_string(),
+        Err(err) => format!("<{}>", err),
     };
 
     // Fetch and parse info about the latest release.

@@ -15,7 +15,7 @@ pub struct ReleaseInfo {
 }
 
 /// API URL for the latest release.
-const LATEST_RELEASE_URL: &'static str =
+const LATEST_RELEASE_URL: &str =
     "https://api.github.com/repos/NeverSinkDev/NeverSink-Filter/releases/latest";
 
 /// Determines and returns info about the latest release available.
@@ -35,7 +35,7 @@ pub fn fetch_url_to_buffer(url: &str) -> Result<Vec<u8>, Box<dyn Error>> {
 
 pub fn determine_documents_dir() -> std::path::PathBuf {
     match dirs::document_dir() {
-        Some(documents) => documents.clone(),
+        Some(documents) => documents,
         None => match dirs::home_dir() {
             Some(homedir) => homedir.join("Documents"),
             None => panic!("Unable to find homedir for user."),
@@ -70,11 +70,7 @@ pub fn read_filter_version_from_string(filename: path::PathBuf) -> Result<String
     let mut f = fs::File::open(filename)?;
     let mut content = String::new();
     f.read_to_string(&mut content)?;
-    if let Some(version_line) = content
-        .split("\n")
-        .filter(|line| line.contains("# VERSION:"))
-        .next()
-    {
+    if let Some(version_line) = content.split('\n').find(|line| line.contains("# VERSION:")) {
         if let Some(version_str) = version_line.split_whitespace().last() {
             return Ok(version_str.to_owned());
         }
