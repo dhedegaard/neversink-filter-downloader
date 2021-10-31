@@ -1,7 +1,6 @@
 # NeverSink filter downloader
 
-[![Build Status](https://travis-ci.org/dhedegaard/neversink-filter-downloader.svg?branch=master)](https://travis-ci.org/dhedegaard/neversink-filter-downloader)
-[![Build status](https://ci.appveyor.com/api/projects/status/u462l05x59dw1llo?svg=true)](https://ci.appveyor.com/project/dhedegaard/neversink-filter-downloader)
+[![Rust](https://github.com/dhedegaard/neversink-filter-downloader/actions/workflows/rust-build.yml/badge.svg)](https://github.com/dhedegaard/neversink-filter-downloader/actions/workflows/rust-build.yml)
 
 A small [Rust](https://www.rust-lang.org/) application for fetching and updating to the latest release of the excellent [NeverSink loot filter](https://github.com/NeverSinkDev/NeverSink-Filter).
 
