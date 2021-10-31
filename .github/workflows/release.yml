@@ -33,8 +33,11 @@ jobs:
       - name: Copy release to release folder
         run: |
           bash -c "mkdir -p release"
-          bash -c "cp -vf target/release/neversink-filter-downloader.exe ./release/."
-          bash -c "cp -vf target/release/neversink-filter-downloader ./release/."
+          bash -c "cp -vf \
+            target/release/neversink-filter-downloader.exe \
+            target/release/neversink-filter-downloader \
+            ./release/. \
+            | true"
 
       - name: Archive Release
         uses: thedoctor0/zip-release@master
