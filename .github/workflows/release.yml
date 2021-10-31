@@ -39,7 +39,7 @@ jobs:
             | true"
 
       - name: Archive Release
-        uses: thedoctor0/zip-release@master
+        uses: TheDoctor0/zip-release@0.6.0
         with:
           type: "zip"
           filename: "neversink-filter-downloader.zip"
