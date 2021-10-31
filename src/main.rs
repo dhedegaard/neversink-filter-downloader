@@ -5,6 +5,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate term_painter;
+extern crate tokio;
 extern crate zip;
 
 mod lib;
@@ -22,13 +23,13 @@ use std::process;
 use term_painter::Color::BrightWhite;
 use term_painter::ToStyle;
 
-fn fetch_and_extract_new_version(
+async fn fetch_and_extract_new_version(
     local_dir: &str,
     latest_release: ReleaseInfo,
 ) -> Result<(), Box<dyn Error>> {
     // Fetch and parse the zipfile.
     println!("{}", BrightWhite.bold().paint("Fetching zip-file... "));
-    let zipfile = fetch_url_to_buffer(&latest_release.zipball_url)?;
+    let zipfile = fetch_url_to_buffer(&latest_release.zipball_url).await?;
     println!(
         "Fetched {} bytes, extracting filters...",
         BrightWhite.bold().paint(zipfile.len().to_string())
@@ -71,7 +72,7 @@ fn fetch_and_extract_new_version(
     Ok(())
 }
 
-fn update_filter(force: bool) -> Result<(), Box<dyn Error>> {
+async fn update_filter(force: bool) -> Result<(), Box<dyn Error>> {
     // Determine the directory on the filesystem, where PoE filters should live.
     let local_dir = determine_poe_dir()?;
     println!(
@@ -95,7 +96,7 @@ fn update_filter(force: bool) -> Result<(), Box<dyn Error>> {
 
     // Fetch and parse info about the latest release.
     println!("Fetching info about the latest release from Github...");
-    let latest_release = determine_latest_release()?;
+    let latest_release = determine_latest_release().await?;
     // Extract the published date as RFC3339, convert it to the local timezone
     // and convert it to a pretty printable.
     let published_at = chrono::DateTime::parse_from_rfc3339(&latest_release.published_at)?;
@@ -125,17 +126,18 @@ fn update_filter(force: bool) -> Result<(), Box<dyn Error>> {
     remove_existing_filters(&local_dir.poedir)?;
 
     println!("Fetching and extracting new filters.");
-    fetch_and_extract_new_version(&local_dir.poedir, latest_release)?;
+    fetch_and_extract_new_version(&local_dir.poedir, latest_release).await?;
 
     println!("{}", BrightWhite.bold().paint("All done"));
     Ok(())
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let force = std::env::args().any(|e| e == "-f");
 
-    if let Err(err) = update_filter(force) {
-        println!("Error updating filter: {}", err);
+    if let Err(err) = update_filter(force).await {
+        println!("Error updating filter: {:#?}", err);
         process::exit(1);
     }
 

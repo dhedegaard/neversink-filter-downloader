@@ -1,36 +1,48 @@
 extern crate serde;
 
-use serde::Deserialize;
+use serde_derive::Deserialize;
 use std::error::Error;
 use std::fs;
 use std::io;
 use std::io::Read;
 use std::path;
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct ReleaseInfo {
     pub tag_name: String,
     pub published_at: String,
     pub zipball_url: String,
 }
 
+/// Useragent for the github API, as it crashes when no header exists.
+const USER_AGENT: &str = "neversink-filter-downloader";
+
 /// API URL for the latest release.
 const LATEST_RELEASE_URL: &str =
     "https://api.github.com/repos/NeverSinkDev/NeverSink-Filter/releases/latest";
 
 /// Determines and returns info about the latest release available.
-pub fn determine_latest_release() -> Result<ReleaseInfo, Box<dyn Error>> {
+pub async fn determine_latest_release() -> Result<ReleaseInfo, Box<dyn Error>> {
     // Fetch the URL and parse the JSON.
-    reqwest::get(LATEST_RELEASE_URL)?
-        .json()
-        .map_err(|e| e.into())
+    Ok(reqwest::Client::new()
+        .get(LATEST_RELEASE_URL)
+        .header(reqwest::header::USER_AGENT, USER_AGENT)
+        .send()
+        .await?
+        .json::<ReleaseInfo>()
+        .await?)
 }
 
 /// Fetches the given URL, returning the body as a string.
-pub fn fetch_url_to_buffer(url: &str) -> Result<Vec<u8>, Box<dyn Error>> {
-    let mut result = vec![];
-    reqwest::get(url)?.read_to_end(&mut result)?;
-    Ok(result)
+pub async fn fetch_url_to_buffer(url: &str) -> Result<Vec<u8>, Box<dyn Error>> {
+    Ok(reqwest::Client::new()
+        .get(url)
+        .header(reqwest::header::USER_AGENT, USER_AGENT)
+        .send()
+        .await?
+        .bytes()
+        .await?
+        .to_vec())
 }
 
 pub fn determine_documents_dir() -> std::path::PathBuf {
