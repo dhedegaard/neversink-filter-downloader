@@ -29,13 +29,18 @@ jobs:
       - name: Run the program
         run: cargo run --release -- -q
 
+      - name: Copy release to release folder
+        run: |
+          mkdir -p release
+          cp -vf target/release/neversink-filter-downloader.exe ./release/.
+          cp -vf target/release/neversink-filter-downloader ./release/.
+
       - name: Archive Release
         uses: thedoctor0/zip-release@master
         with:
           type: "zip"
           filename: "release.zip"
-          directory: "target/release"
-          path: "neversink-filter-downloader.exe"
+          path: "./release"
           exclusions: "*.git* /*node_modules/* .editorconfig"
 
       - name: Upload Release
