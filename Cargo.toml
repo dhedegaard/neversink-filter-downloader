@@ -10,14 +10,14 @@ reqwest = "^0.9.4"
 serde = "*"
 serde_derive = "*"
 serde_json = "*"
-zip = "^0.4.2"
-colored = "^1.6.1"
-term-painter = "^0.2.4"
-chrono = "^0.4.6"
-dirs = "^2.0.2"
+zip = "^0.5"
+colored = "^2.0"
+term-painter = "^0.3"
+chrono = "^0.4"
+dirs = "^4.0"
 
 [target.'cfg(windows)'.build-dependencies]
-winres = "^0.1.6"
+winres = "^0.1"
 
 [package.metadata.winres]
 OriginalFilename = "neversink-filter-downloader.exe"
