@@ -41,6 +41,7 @@ pub async fn fetch_url_to_buffer(url: &str) -> Result<Vec<u8>, Box<dyn Error>> {
         .header(reqwest::header::USER_AGENT, USER_AGENT)
         .send()
         .await?
+        .error_for_status()?
         .bytes()
         .await?
         .to_vec())
