@@ -27,9 +27,13 @@ async fn fetch_and_extract_new_version(
     local_dir: &str,
     latest_release: ReleaseInfo,
 ) -> Result<(), Box<dyn Error>> {
+    // Explicitly target the tag name and no a possible tag overlapping with the
+    // same name. An example:
+    // <https://api.github.com/repos/NeverSinkDev/NeverSink-Filter/zipball/8.10.0>
+    let zipball_url = latest_release.zipball_url.replace("/zipball/", "/zipball/refs/tags/");
     // Fetch and parse the zipfile.
     println!("{}", BrightWhite.bold().paint("Fetching zip-file... "));
-    let zipfile = fetch_url_to_buffer(&latest_release.zipball_url).await?;
+    let zipfile = fetch_url_to_buffer(&zipball_url).await?;
     println!(
         "Fetched {} bytes, extracting filters...",
         BrightWhite.bold().paint(zipfile.len().to_string())
