@@ -29,6 +29,7 @@ pub async fn determine_latest_release() -> Result<ReleaseInfo, Box<dyn Error>> {
         .header(reqwest::header::USER_AGENT, USER_AGENT)
         .send()
         .await?
+        .error_for_status()?
         .json::<ReleaseInfo>()
         .await?)
 }
