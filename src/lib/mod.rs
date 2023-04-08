@@ -1,13 +1,11 @@
 extern crate serde;
 
 use serde_derive::Deserialize;
-use std::env;
 use std::error::Error;
 use std::fs;
 use std::io;
 use std::io::Read;
 use std::path;
-use std::path::Path;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ReleaseInfo {
@@ -68,10 +66,7 @@ pub struct DeterminePoeDirResult {
 /// directory.
 pub fn determine_poe_dir() -> Result<DeterminePoeDirResult, Box<dyn Error>> {
     let poedir = if cfg!(target_os = "macos") {
-        let home_env = env::var("HOME").unwrap();
-        Path::new(&home_env)
-            .join("Library")
-            .join("Application Support")
+        dirs::config_dir().unwrap()
             .join("Path of Exile")
             .join("Preferences")
             .join("ItemFilters")
