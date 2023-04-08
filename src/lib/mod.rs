@@ -69,15 +69,15 @@ pub struct DeterminePoeDirResult {
 pub fn determine_poe_dir() -> Result<DeterminePoeDirResult, Box<dyn Error>> {
     let poedir = if cfg!(target_os = "macos") {
         let home_env = env::var("HOME").unwrap();
-        let home_path = Path::new(&home_env);
-        home_path.join("Library")
+        Path::new(&home_env)
+            .join("Library")
             .join("Application Support")
             .join("Path of Exile")
             .join("Preferences")
             .join("ItemFilters")
     } else {
-        let documents = determine_documents_dir();
-        documents.join("My Games")
+        determine_documents_dir()
+            .join("My Games")
             .join("Path of Exile")
     };
     let mut created = false;
