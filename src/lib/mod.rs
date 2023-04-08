@@ -1,11 +1,13 @@
 extern crate serde;
 
 use serde_derive::Deserialize;
+use std::env;
 use std::error::Error;
 use std::fs;
 use std::io;
 use std::io::Read;
 use std::path;
+use std::path::Path;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ReleaseInfo {
@@ -61,12 +63,23 @@ pub struct DeterminePoeDirResult {
     pub poedir: String,
     pub directory_created: bool,
 }
+
 /// Determines and returns a path object pointing to the PoE configuration
 /// directory.
 pub fn determine_poe_dir() -> Result<DeterminePoeDirResult, Box<dyn Error>> {
-    let documents = determine_documents_dir();
-
-    let poedir = documents.join("My Games").join("Path of Exile");
+    let poedir = if cfg!(target_os = "macos") {
+        let home_env = env::var("HOME").unwrap();
+        let home_path = Path::new(&home_env);
+        home_path.join("Library")
+            .join("Application Support")
+            .join("Path of Exile")
+            .join("Preferences")
+            .join("ItemFilters")
+    } else {
+        let documents = determine_documents_dir();
+        documents.join("My Games")
+            .join("Path of Exile")
+    };
     let mut created = false;
     if !poedir.exists() {
         fs::create_dir_all(&poedir)?;
