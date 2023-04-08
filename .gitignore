@@ -60,6 +60,5 @@ htmlcov
 
 target/
 **/*.rs.bk
-Cargo.lock
 
 .vscode
