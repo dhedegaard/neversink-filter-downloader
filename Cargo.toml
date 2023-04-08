@@ -15,7 +15,7 @@ serde_derive = "*"
 serde_json = "*"
 term-painter = "^0.3"
 tokio = { version = "1", features = ["full"] }
-zip = "^0.5"
+zip = "^0.6"
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "^0.1"
