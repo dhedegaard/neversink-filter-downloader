@@ -6,16 +6,16 @@ build = "build.rs"
 edition = '2021'
 
 [dependencies]
-chrono = "^0.4"
-colored = "^2.0"
-dirs = "^5.0"
-reqwest = { version = "0.11", features = ["json"] }
-serde = "*"
-serde_derive = "*"
-serde_json = "*"
-term-painter = "^0.3"
-tokio = { version = "1", features = ["full"] }
-zip = "^0.6"
+chrono = "^0.4.35"
+colored = "^2.1.0"
+dirs = "^5.0.1"
+reqwest = { version = "0.12.2", features = ["json"] }
+serde = "1.0.197"
+serde_derive = "1.0.197"
+serde_json = "1.0.115"
+term-painter = "^0.4.0"
+tokio = { version = "1.36.0", features = ["full"] }
+zip = "^0.6.6"
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "^0.1"
