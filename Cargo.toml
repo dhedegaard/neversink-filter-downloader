@@ -1,20 +1,20 @@
 [package]
 name = "neversink-filter-downloader"
-version = "0.4.3"
+version = "0.4.4"
 authors = ["Dennis Hedegaard <dennis@dhedegaard.dk>"]
 build = "build.rs"
 edition = '2021'
 
 [dependencies]
-chrono = "^0.4.35"
+chrono = "^0.4.39"
 colored = "^2.1.0"
 dirs = "^5.0.1"
-reqwest = { version = "0.12.2", features = ["json"] }
-serde = "1.0.197"
-serde_derive = "1.0.197"
-serde_json = "1.0.115"
+reqwest = { version = "0.12.9", features = ["json"] }
+serde = "1.0.216"
+serde_derive = "1.0.216"
+serde_json = "1.0.133"
 term-painter = "^0.4.0"
-tokio = { version = "1.36.0", features = ["full"] }
+tokio = { version = "1.42.0", features = ["full"] }
 zip = "^0.6.6"
 
 [target.'cfg(windows)'.build-dependencies]
