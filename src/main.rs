@@ -49,7 +49,7 @@ async fn fetch_and_extract_new_version(
         let mut file = zipfile.by_index(i)?;
 
         // Skip files that are not .filter, or not in the root of the zipfile.
-        let filename = file.name().to_owned();
+        let filename = file.name()?.into_owned();
         let path = path::Path::new(&filename);
         if path.extension().is_none()
             || path.extension().unwrap() != "filter"
