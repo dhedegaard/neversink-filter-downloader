@@ -19,6 +19,8 @@ cargo fmt                # format
 cargo clippy -- -D warnings  # lint
 ```
 
+`fmt --check` and `clippy -D warnings` currently fail on existing code (`special_module_name`, `io::Error::other`). CI runs both with `continue-on-error`, so verify with `cargo test` + `cargo build --release`.
+
 ## Architecture
 
 All logic lives in two files:
